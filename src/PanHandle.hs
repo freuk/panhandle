@@ -7,6 +7,7 @@ import Data.Data
 import Data.Generics
 import Data.Maybe
 import Data.Text (Text)
+import Data.String (fromString)
 import Text.Pandoc
 import Text.Pandoc.JSON
 import Text.Pandoc.Walk (walk, query)
@@ -28,7 +29,7 @@ bNoUnwrap :: Block -> Maybe Attr
 bNoUnwrap b = bAttrs b >>= noUnwrap
 
 bCode :: Block -> Maybe Text
-bCode (CodeBlock _ c) = Just c
+bCode (CodeBlock _ c) = Just (fromString c)
 bCode _               = Nothing
 
 blocks :: Pandoc -> [Block]
@@ -42,7 +43,7 @@ readJson ro s = case runPure (readJSON ro s) of
 bUnwrap' :: Block -> [Block]
 bUnwrap' b = case b of
   CodeBlock (i, cs, as) x | "unwrap" `elem` cs ->
-    let content = bUnwrap (blocks (readJson def x))
+    let content = bUnwrap (blocks (readJson def (fromString x)))
      in case (i, filter (/= "unwrap") cs, as) of
              ("", [],  []) -> content
              (_,  cs', _)  -> [Div (i, cs', as) content]
@@ -61,7 +62,7 @@ iNoUnwrap :: Inline -> Maybe Attr
 iNoUnwrap b = iAttrs b >>= noUnwrap
 
 iCode :: Inline -> Maybe Text
-iCode (Code _ c) = Just c
+iCode (Code _ c) = Just (fromString c)
 iCode _          = Nothing
 
 inlines :: Pandoc -> [Inline]
